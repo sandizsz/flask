@@ -4,10 +4,6 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-}
-
 def scrape_rimi_price():
     url = "https://www.rimi.lv/e-veikals/en/products/alcoholic-beverages/beer/import-beer/alus-corona-extra-4-5-0-355l/p/1371038"
     response = requests.get(url)
@@ -66,7 +62,7 @@ def scrape_alkoutlet_price():
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    price_element = soup.select_one(".special-price .price")
+    price_element = soup.select_one(".product-info-main .price")
 
     if price_element:
         price = price_element.string.strip()
@@ -152,7 +148,12 @@ def scrape_toplv_price():
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
-    price_element = soup.select_one(".autocalc-product-price")
+    # Check for the special price class first
+    price_element = soup.select_one(".autocalc-product-special")
+
+    # If not found, fall back to the regular price class
+    if not price_element:
+        price_element = soup.select_one(".autocalc-product-price")
 
     if price_element:
         price = price_element.text.strip()
@@ -166,6 +167,7 @@ def scrape_toplv_price():
         return formatted_price, url
     else:
         return None, None
+
 
 
 def scrape_lats_price():
@@ -190,7 +192,7 @@ def scrape_lats_price():
 
 
 def scrape_vynoteka_price():
-    url = "https://vynoteka.lv/corona-extra-alus-pud-0355l-45"
+    url = "https://vynoteka.lv/en/corona-extra-alus-pud-0355l-45"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -199,8 +201,12 @@ def scrape_vynoteka_price():
     if price_element:
         price_int = price_element.find(class_="product-price__int").get_text(strip=True)
         price_decimal = price_element.find(class_="product-price__decimal").get_text(strip=True)
+        currency = price_element.find(class_="product-price__currency").get_text(strip=True)
 
-        return price_int, url
+        # Combine the integer and decimal parts of the price
+        formatted_price = f"{price_int}.{price_decimal}"
+
+        return formatted_price, url
     else:
         return None, None
 
@@ -213,7 +219,7 @@ def index():
     cenuklubs_price, cenuklubs_url = scrape_cenuklubs_price()
     toplv_price, toplv_url = scrape_toplv_price()
     lats_price, lats_old_price, lats_url = scrape_lats_price()
-    android_price, android_url = scrape_androidcompare_price()
+    vynoteka_price, vynoteka_url = scrape_vynoteka_price()
     spiritsandwine_price, spiritsandwine_url = scrape_spiritsandwine_price()
     lidl_price, lidl_url = scrape_lidl_price()
 
@@ -232,10 +238,14 @@ def index():
         lats_price=lats_price,
         lats_old_price=lats_old_price,
         lats_url=lats_url,
-        android_price=android_price,
+        vynoteka_price=vynoteka_price,
+        vynoteka_url = vynoteka_url,
         lidl_price=lidl_price,
         lidl_url=lidl_url,
         spiritsandwine_price=spiritsandwine_price,
         spiritsandwine_url=spiritsandwine_url,
         discount_card=discount_card
     )
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
