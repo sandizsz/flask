@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Price Comparison</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .product-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-section {
+            background-color: rgba(135, 151, 178, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .separator {
+            width: 80%;
+            height: 1px;
+            background-color: rgba(226, 232, 240, 0.8);
+            margin: 1rem auto;
+        }
+
+        .highlight {
+            background-color: rgba(255, 255, 0, 0.3);
+        }
+
+        .productPrice::after {
+            content: " €";
+        }
+
+        tr {
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="flex justify-center items-center h-screen">
+        <div class="w-1400px">
+            <div class="hero-section bg-blue-500 text-white text-center py-4">
+                <h1 class="text-2xl font-bold">Alus CORONA EXTRA 4,5% 355ml</h1>
+                <img src="/static/corona.png" alt="corona" class="max-h-40 mx-auto mt-4">
+                <h2 class="text-xl mt-4">Cheapest Price:</h2>
+                <span id="cheapestPrice" class="productPrice text-3xl font-bold"></span>
+                <span id="cheapestSupplier" class="text-sm font-bold"></span>
+                <div class="extraInfo">
+               
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="product-container bg-white bg-opacity-40 backdrop-filter backdrop-blur-md">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Price</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if rimi_price %}
+                        <tr class="rimi">
+                            <td class="supplier">Rimi</td>
+                            <td class="productPrice">{{ rimi_price }}</td>
+                            <td><a href="{{ rimi_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if barbora_price %}
+                        <tr class="barbora">
+                            <td class="supplier">Barbora/MAXIMA</td>
+                            <td class="productPrice">{{ barbora_price }}</td>
+                            <td><a href="{{ barbora_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if alkoutlet_price %}
+                        <tr class="alkoutlet">
+                            <td class="supplier">Alkoutlet</td>
+                            <td class="productPrice">{{ alkoutlet_price }}</td>
+                            <td><a href="{{ alkoutlet_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if cenuklubs_price %}
+                        <tr class="cenuklubs">
+                            <td class="supplier">Cenuklubs</td>
+                            <td class="productPrice">{{ cenuklubs_price }}</td>
+                            <td><a href="{{ cenuklubs_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if vynoteka_price %}
+                        <tr class="vynoteka">
+                            <td class="supplier">Android</td>
+                            <td class="productPrice">{{ vynoteka_price }}</td>
+                            <td><a href="{{ vynoteka_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if toplv_price %}
+                        <tr class="top">
+                            <td class="supplier">TOP</td>
+                            <td class="productPrice">{{ toplv_price }}</td>
+                            <td><a href="{{ toplv_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if spiritsandwine_price %}
+                        <tr class="spiritsandwine">
+                            <td class="supplier">Spiritsandwine</td>
+                            <td class="productPrice">{{ spiritsandwine_price }}</td>
+                            <td><a href="{{ spiritsandwine_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                
+                        {% if lidl_price %}
+                        <tr class="lidl">
+                            <td class="supplier">LIDL</td>
+                            <td class="productPrice">{{ lidl_price }}</td>
+                            <td><a href="{{ lidl_url }}">View</a></td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get all the product prices
+        const productPrices = Array.from(document.querySelectorAll('.productPrice'));
+
+        // Remove any NaN values and convert prices to numbers
+        const validPrices = productPrices
+            .map(price => parseFloat(price.textContent))
+            .filter(price => !isNaN(price));
+
+        // Find the smallest price
+        const smallestPrice = Math.min(...validPrices);
+
+        // Set the smallest price in the hero section
+        const cheapestPriceElement = document.getElementById('cheapestPrice');
+        cheapestPriceElement.textContent = smallestPrice.toFixed(2);
+
+        // Sort the rows based on the price
+        const productTable = document.querySelector('table');
+        const sortedRows = Array.from(document.querySelectorAll('tbody > tr'))
+            .sort((a, b) => {
+                const aPrice = parseFloat(a.querySelector('.productPrice').textContent);
+                const bPrice = parseFloat(b.querySelector('.productPrice').textContent);
+                return aPrice - bPrice;
+            });
+
+        // Clear the existing rows
+        while (productTable.rows.length > 1) {
+            productTable.deleteRow(1);
+        }
+
+        // Append the sorted rows
+        sortedRows.forEach(row => {
+            productTable.appendChild(row);
+        });
+
+        // Highlight the row with the smallest price
+        const smallestPriceRow = sortedRows.find(row => {
+            const rowPrice = parseFloat(row.querySelector('.productPrice').textContent);
+            return rowPrice === smallestPrice;
+        });
+
+        smallestPriceRow.classList.add('highlight');
+    </script>
+</body>
+</html>
