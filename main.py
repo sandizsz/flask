@@ -169,6 +169,32 @@ def scrape_toplv_price():
         return None, None
 
 
+def scrape_superalko_price():
+    url = "https://www.superalko.lv/product-detail/corona-beer-45-355-cl"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Check for the special price class first
+    price_element = soup.select_one(".total_price")
+
+    # If not found, fall back to the regular price class
+    if not price_element:
+        price_element = soup.select_one(".total_price")
+
+    if price_element:
+        price = price_element.text.strip()
+
+        # Remove unwanted characters from the price string
+        price = price.replace('€', '').replace(',', '.').strip()
+
+        # Format the price
+        formatted_price = f"{float(price):.2f}"
+
+        return formatted_price, url
+    else:
+        return None, None
+
+
 
 def scrape_lats_price():
     url = "https://www.e-latts.lv/alus-gaisais-corona-extra-4-5-0-355l.21799.p"
@@ -217,6 +243,7 @@ def index():
     barbora_price, barbora_url = scrape_barbora_price()
     alkoutlet_price, alkoutlet_url = scrape_alkoutlet_price()
     cenuklubs_price, cenuklubs_url = scrape_cenuklubs_price()
+    superalko_price, superalko_url = scrape_superalko_price()
     toplv_price, toplv_url = scrape_toplv_price()
     lats_price, lats_old_price, lats_url = scrape_lats_price()
     vynoteka_price, vynoteka_url = scrape_vynoteka_price()
@@ -233,6 +260,8 @@ def index():
         alkoutlet_url=alkoutlet_url,
         cenuklubs_price=cenuklubs_price,
         cenuklubs_url=cenuklubs_url,
+        superalko_price = superalko_price,
+        superalko_url = superalko_url,
         toplv_price=toplv_price,
         toplv_url=toplv_url,
         lats_price=lats_price,
