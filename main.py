@@ -247,4 +247,5 @@ def index():
         discount_card=discount_card
     )
 
-
+if __name__ == '__main__':
+    app.run()
